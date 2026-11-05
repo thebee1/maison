@@ -3,7 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>index</title>
+<meta name="theme-color" content="#17202b">
+<meta name="description" content="Explorez une cité anime de dix maisons et visitez chaque intérieur en 3D.">
+<title>La Maison — visite 3D</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap">
 <style>
 :root{--bg:#dfe6ec;--ink:#17202b;--paper:#f3f5f7;--sun:#f2c14e;color-scheme:light dark}
@@ -19,37 +21,69 @@ canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-actio
 #info p{margin:0;font-size:.95rem;line-height:1.45;opacity:.9}
 #map{position:fixed;right:14px;top:calc(14px + env(safe-area-inset-top,0px));padding:8px}
 #map canvas{display:block;width:130px;height:78px}
+#map::after{content:"REPÈRE";display:block;text-align:center;padding-top:3px;font-size:.62rem;font-weight:800;letter-spacing:.14em;opacity:.72}
+#tools{position:fixed;right:160px;top:calc(14px + env(safe-area-inset-top,0px));display:flex;gap:8px;padding:8px;z-index:10}
+#tools button,#status{font:inherit;font-weight:600;font-size:.78rem;color:var(--paper);background:rgba(23,32,43,.72);border:0;border-radius:10px;padding:8px 10px;cursor:pointer}
+#tools button:hover{background:rgba(255,255,255,.12)}
+#status{position:fixed;left:14px;bottom:calc(82px + env(safe-area-inset-bottom,0px));padding:8px 12px;opacity:.9;display:none;z-index:10}
+#toast{position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top,0px));transform:translate(-50%,-12px);padding:10px 14px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:20}
+#toast.show{opacity:1;transform:translate(-50%,0)}
 #bar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom,0px));display:flex;gap:6px;padding:6px;max-width:calc(100vw - 16px);overflow-x:auto}
 #bar button{font:inherit;font-weight:600;font-size:.92rem;color:var(--paper);background:transparent;border:0;border-radius:10px;padding:10px 13px;cursor:pointer;white-space:nowrap}
 #bar button:hover{background:rgba(255,255,255,.1)}
 #bar button.on{background:var(--sun);color:var(--ink)}
+#houseNav{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(76px + env(safe-area-inset-bottom,0px));display:none;align-items:center;gap:8px;padding:7px;z-index:10}
+#houseNav button{font:inherit;font-weight:700;color:var(--paper);background:rgba(255,255,255,.08);border:0;border-radius:9px;padding:9px 12px;cursor:pointer;white-space:nowrap}
+#houseNav button:hover{background:rgba(255,255,255,.17)}
+#houseCount{min-width:94px;text-align:center;font-size:.85rem;font-weight:800;color:var(--sun)}
 button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 #hint{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(78px + env(safe-area-inset-bottom,0px));font-size:.85rem;padding:6px 12px;white-space:nowrap}
 #pad{display:none;position:fixed;right:14px;bottom:calc(84px + env(safe-area-inset-bottom,0px));flex-direction:column;gap:8px}
 #pad button{width:58px;height:58px;font-size:1.4rem;border:0;border-radius:50%;background:rgba(23,32,43,.84);color:var(--paper);touch-action:none}
 @media (pointer:coarse){#pad{display:flex}#hint{display:none}}
-#intro{position:fixed;inset:0;display:flex;align-items:flex-end;padding:20px;background:linear-gradient(90deg,rgba(16,22,29,.75),rgba(16,22,29,0) 70%)}
-#intro .card{max-width:440px;padding:26px 28px;margin-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
-#intro h1{margin:0 0 8px;font-size:clamp(2rem,6vw,3rem);line-height:1;font-weight:800;letter-spacing:-.03em}
-#intro p{margin:0 0 18px;line-height:1.5;opacity:.9}
-#go{font:inherit;font-weight:800;font-size:1.05rem;background:var(--sun);color:var(--ink);border:0;border-radius:12px;padding:13px 22px;cursor:pointer}
+#intro{position:fixed;inset:0;display:flex;align-items:flex-end;padding:clamp(18px,5vw,64px);background:linear-gradient(90deg,rgba(10,16,22,.86),rgba(10,16,22,.22) 70%),linear-gradient(0deg,rgba(10,16,22,.5),transparent 60%);z-index:5}
+#intro .card{max-width:520px;padding:clamp(24px,4vw,38px);margin-bottom:calc(10px + env(safe-area-inset-bottom,0px));border:1px solid rgba(255,255,255,.14);box-shadow:0 24px 80px rgba(0,0,0,.25)}
+#intro .eyebrow{margin:0 0 12px;color:var(--sun);font-size:.76rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase}
+#intro h1{margin:0 0 12px;font-size:clamp(2.4rem,7vw,4.4rem);line-height:.96;font-weight:800;letter-spacing:-.05em}
+#intro p{margin:0 0 20px;line-height:1.6;opacity:.9}
+#intro .features{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 24px}
+#intro .features span{padding:7px 10px;border:1px solid rgba(255,255,255,.18);border-radius:999px;font-size:.76rem;font-weight:600;background:rgba(255,255,255,.07)}
+#go{font:inherit;font-weight:800;font-size:1.02rem;background:var(--sun);color:var(--ink);border:0;border-radius:12px;padding:14px 20px;cursor:pointer;transition:transform .18s,filter .18s}
+#go:hover{transform:translateY(-2px);filter:brightness(1.05)}
 #intro.off{display:none}
-@media (max-width:560px){#bar button{padding:9px 9px;font-size:.8rem}#info h2{font-size:1.2rem}#info p{display:none}#map canvas{width:100px;height:60px}}
+@media (max-width:700px){#tools{right:12px;top:auto;bottom:calc(78px + env(safe-area-inset-bottom,0px));padding:5px}#tools button{font-size:.72rem;padding:8px}#map{right:10px;top:calc(10px + env(safe-area-inset-top,0px))}#map canvas{width:100px;height:60px}#info{left:10px;top:calc(10px + env(safe-area-inset-top,0px));max-width:calc(100vw - 140px);padding:11px 13px}#bar{max-width:calc(100vw - 12px)}#bar button{padding:9px 9px;font-size:.8rem}#info h2{font-size:1.2rem}#info p{display:none}#hint{max-width:calc(100vw - 24px);white-space:normal;text-align:center}}
+@media (max-width:700px){#houseNav{bottom:calc(136px + env(safe-area-inset-bottom,0px));max-width:calc(100vw - 16px);gap:4px;padding:5px}#houseNav button{padding:8px 9px;font-size:.75rem}#houseCount{min-width:70px;font-size:.75rem}}
+@media (max-width:380px){#tools{left:10px;right:auto;bottom:calc(78px + env(safe-area-inset-bottom,0px))}#tools button{font-size:.68rem}#pad{right:10px}}
 </style>
 </head>
 <body>
 <canvas id="c" aria-label="Visite 3D de la maison"></canvas>
 <div id="info" class="glass"><h2></h2><div class="m"></div><p></p></div>
+<div id="tools" class="glass">
+  <button id="themeToggle" aria-label="Changer le thème">Thème</button>
+  <button id="tourBtn" aria-label="Lancer la visite guidée">Visite guidée</button>
+  <button id="fullscreenBtn" aria-label="Passer en plein écran">Plein écran</button>
+</div>
 <div id="map" class="glass"><canvas width="300" height="180"></canvas></div>
 <div id="hint" class="glass">Glissez pour regarder · Z Q S D ou flèches pour marcher · l’escalier se monte à pied</div>
+<div id="status" class="glass" aria-live="polite">Mode libre</div>
+<div id="toast" class="glass" role="status" aria-live="polite"></div>
 <div id="pad"><button id="pf" aria-label="Avancer">▲</button><button id="pb" aria-label="Reculer">▼</button></div>
 <div id="bar" class="glass">
-<button data-r="top0">Plan RDC</button><button data-r="top1">Plan étage</button><button data-r="cuisine">Cuisine</button><button data-r="salon">Salon</button><button data-r="chambre">Chambre</button>
+<button data-r="quartier">Le quartier</button><button data-r="top0">Plan RDC</button><button data-r="top1">Plan étage</button><button data-r="cuisine">Cuisine</button><button data-r="salon">Salon</button><button data-r="chambre">Chambre</button><button data-r="escalier">Escalier</button>
+</div>
+<div id="houseNav" class="glass" aria-label="Navigation entre les maisons">
+  <button id="prevHouse" aria-label="Visiter la maison précédente">← Précédente</button>
+  <span id="houseCount" aria-live="polite">Maison 01 / 10</span>
+  <button id="neighborhoodBtn">Quartier</button>
+  <button id="nextHouse" aria-label="Visiter la maison suivante">Suivante →</button>
 </div>
 <div id="intro"><div class="card glass">
-<h1>Maison 3 pièces, deux niveaux</h1>
-<p>Cuisine et salon au rez-de-chaussée, chambre à l’étage. Marchez dans la maison, montez l’escalier, ou volez d’une pièce à l’autre.</p>
-<button id="go">Commencer la visite</button></div></div>
+<p class="eyebrow">Visite anime en 3D</p>
+<h1>Bienvenue dans<br>l’allée Sakura.</h1>
+<p>Explorez une petite cité anime de dix maisons colorées. Visitez l’intérieur de la maison principale, puis prenez de la hauteur pour découvrir le quartier.</p>
+<div class="features"><span>✦ 2 niveaux</span><span>⌂ 10 maisons</span><span>◉ Ambiance anime</span></div>
+<button id="go">Survoler le quartier <span aria-hidden="true">→</span></button></div></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
@@ -61,15 +95,15 @@ renderer.outputEncoding=THREE.sRGBEncoding;
 renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.9;
 renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 const scene=new THREE.Scene();
-(()=>{const c=document.createElement('canvas');c.width=2;c.height=256;const g=c.getContext('2d'),gr=g.createLinearGradient(0,0,0,256);gr.addColorStop(0,'#8fbbe3');gr.addColorStop(1,'#eaf2f7');g.fillStyle=gr;g.fillRect(0,0,2,256);const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;scene.background=t})();
-scene.fog=new THREE.Fog(0xdbe8f0,28,70);
+(()=>{const c=document.createElement('canvas');c.width=2;c.height=256;const g=c.getContext('2d'),gr=g.createLinearGradient(0,0,0,256);gr.addColorStop(0,'#6388bf');gr.addColorStop(.52,'#b1c7e8');gr.addColorStop(1,'#ffe0b9');g.fillStyle=gr;g.fillRect(0,0,2,256);const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;scene.background=t})();
+scene.fog=new THREE.Fog(0xdbe8f0,42,110);
 const cam=new THREE.PerspectiveCamera(70,1,.05,120);cam.rotation.order='YXZ';
 
 scene.add(new THREE.HemisphereLight(0xdfeeff,0x8a7f72,.6));
 const sun=new THREE.DirectionalLight(0xfff1d6,1.1);
 sun.position.set(14,16,10);sun.target.position.set(5,0,3);scene.add(sun,sun.target);
 sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
-Object.assign(sun.shadow.camera,{left:-10,right:10,top:10,bottom:-10,near:1,far:45});
+Object.assign(sun.shadow.camera,{left:-36,right:36,top:36,bottom:-36,near:1,far:100});
 sun.shadow.bias=-.0004;sun.shadow.normalBias=.03;
 
 const gDown=new THREE.Group(),gUp=new THREE.Group(),gRoof=new THREE.Group();
@@ -100,6 +134,22 @@ const tiles=(rx,rz)=>tex(g=>{g.fillStyle='#e9edf0';g.fillRect(0,0,256,256);g.str
 function plane(x1,x2,z1,z2,y,m,g,up=true){
   const p=new THREE.Mesh(new THREE.PlaneGeometry(x2-x1,z2-z1),m);p.rotation.x=up?-Math.PI/2:Math.PI/2;p.position.set((x1+x2)/2,y,(z1+z2)/2);p.receiveShadow=true;g.add(p);
 }
+const edgeMaterial=new THREE.LineBasicMaterial({color:0x111111,linewidth:2});
+function outlineBox(mesh){
+  const edges=new THREE.LineSegments(new THREE.EdgesGeometry(mesh.geometry),edgeMaterial);
+  edges.renderOrder=1;mesh.add(edges);
+}
+function floorBorder(x1,x2,z1,z2,y,parent){
+  const width=.035,height=.018,edgeMat=mat(0x171717);
+  const strip=(x,z,w,d)=>{
+    const edge=new THREE.Mesh(new THREE.BoxGeometry(w,height,d),edgeMat);
+    edge.position.set(x,y+height/2,z);edge.receiveShadow=true;parent.add(edge);
+  };
+  strip((x1+x2)/2,z1,x2-x1,width);
+  strip((x1+x2)/2,z2,x2-x1,width);
+  strip(x1,(z1+z2)/2,width,z2-z1);
+  strip(x2,(z1+z2)/2,width,z2-z1);
+}
 function slab(x1,x2,z1,z2,top){
   const b=new THREE.Mesh(new THREE.BoxGeometry(x2-x1,.2,z2-z1),mat(0xf6f6f4));b.position.set((x1+x2)/2,2.8,(z1+z2)/2);b.receiveShadow=true;gUp.add(b);
   plane(x1,x2,z1,z2,LV+.005,top,gUp);
@@ -117,14 +167,254 @@ function tree(x,z,s){
   cy(x,0,z,.15*s,1.6*s,0x6b4b32);gDown.children.length;
   [[0,2.2,0,1.2],[.5,2.9,.2,.9],[-.4,3.1,-.2,.8]].forEach(([a,b,c,r])=>{const m=new THREE.Mesh(new THREE.IcosahedronGeometry(r*s,1),mat(0x4f8a5b));m.position.set(x+a*s,b*s,z+c*s);m.castShadow=true;scene.add(m)});
 }
-tree(-3,1.5,1.3);tree(13,6,1.1);tree(-2.5,8.5,1);tree(12.5,-2,1.4);tree(1,-4,1.2);
+const cityHomes=[];
+const cityGroup=new THREE.Group();cityGroup.visible=false;scene.add(cityGroup);
+function cityMesh(parent,geometry,material,x,y,z,outlined=false){
+  const mesh=new THREE.Mesh(geometry,material);
+  mesh.position.set(x,y,z);mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);
+  if(outlined){
+    const lines=new THREE.LineSegments(new THREE.EdgesGeometry(geometry),new THREE.LineBasicMaterial({color:0x493d4b}));
+    lines.renderOrder=1;mesh.add(lines);
+  }
+  return mesh;
+}
+function cityBox(parent,x,y,z,w,h,d,color,outlined=false){
+  return cityMesh(parent,new THREE.BoxGeometry(w,h,d),mat(color),x,y,z,outlined);
+}
+function addRoads(){
+  const road=(x,z,w,d)=>cityBox(cityGroup,x,-.075,z,w,.08,d,0x454954);
+  const walk=(x,z,w,d)=>cityBox(cityGroup,x,-.09,z,w,.07,d,0xe4cfc1);
+  [-21,-5,11,27].forEach(z=>{
+    road(10,z,94,4.6);
+    walk(10,z-2.65,94,.55);walk(10,z+2.65,94,.55);
+    for(let x=-32;x<52;x+=8)cityBox(cityGroup,x,-.025,z,3.2,.025,.13,0xf4df9c);
+  });
+  [-17.5,-2.5,12.5,27.5,42.5].forEach(x=>{
+    road(x,4,4.6,68);
+    walk(x-2.65,4,.55,68);walk(x+2.65,4,.55,68);
+    for(let z=-26;z<36;z+=8)cityBox(cityGroup,x,-.025,z,.13,.025,3.2,0xf4df9c);
+  });
+  const poleMat=mat(0x333642);
+  [[-2.5,-5],[12.5,-5],[27.5,-5],[-2.5,11],[12.5,11],[27.5,11],[-2.5,27],[12.5,27],[27.5,27]].forEach(([x,z])=>{
+    cityMesh(cityGroup,new THREE.CylinderGeometry(.055,.085,3.1,8),poleMat,x,-.05,z);
+    cityMesh(cityGroup,new THREE.BoxGeometry(.8,.09,.09),poleMat,x+.35,1.46,z);
+    cityMesh(cityGroup,new THREE.SphereGeometry(.19,12,8),new THREE.MeshBasicMaterial({color:0xffe2a0}),x+.68,1.35,z);
+  });
+}
+function addAnimeHouse(cx,cz,style,index){
+  const group=new THREE.Group();group.position.set(cx,0,cz);cityGroup.add(group);
+  const width=6.6,depth=6.1,base=.02,height=4.05,front=depth/2;
+  const bodyMat=new THREE.MeshStandardMaterial({color:style.wall,roughness:.88});
+  group.userData.houseIndex=index;
+  cityBox(group,0,-.08,0,7.8,.2,7.4,0xcac1b1,true);
+  cityMesh(group,new THREE.BoxGeometry(width,height,depth),bodyMat,0,base+height/2,0,true);
+  const gableShape=new THREE.Shape();
+  gableShape.moveTo(-width/2,0);gableShape.lineTo(width/2,0);gableShape.lineTo(0,1.3);gableShape.closePath();
+  const gableGeom=new THREE.ShapeGeometry(gableShape);
+  const gableMat=new THREE.MeshStandardMaterial({color:style.wall,roughness:.88,side:THREE.DoubleSide});
+  cityMesh(group,gableGeom,gableMat,0,base+height,front+.012,true);
+  const backGable=cityMesh(group,gableGeom,gableMat,0,base+height,-front-.012,true);
+  backGable.rotation.y=Math.PI;
+  const roofAngle=.4,roofDepth=Math.hypot(depth*.58,1.3);
+  const roofMat=new THREE.MeshStandardMaterial({color:style.roof,roughness:.78});
+  const roofFront=cityMesh(group,new THREE.BoxGeometry(width+.85,.2,roofDepth),roofMat,0,base+height+.65,depth*.25,true);
+  roofFront.rotation.x=-roofAngle;
+  const roofBack=cityMesh(group,new THREE.BoxGeometry(width+.85,.2,roofDepth),roofMat,0,base+height+.65,-depth*.25,true);
+  roofBack.rotation.x=roofAngle;
+  cityBox(group,-width*.31,base+height*.5,0,.13,.16,depth+.12,style.trim);
+  cityBox(group,width*.31,base+height*.5,0,.13,.16,depth+.12,style.trim);
+  cityBox(group,0,base+.14,front+.11,1.25,.25,.3,style.trim);
+  const window=(x,y,z,side=false)=>{
+    const pane=cityBox(group,x,y,z,1.03,1.02,.12,0x40556d,true);
+    const glassPane=cityBox(group,x,y,z+(side?-.075:.075),.78,.76,.035,style.window);
+    cityBox(group,x,y,z+(side?-.1:.1),.07,.82,.04,style.trim);
+    cityBox(group,x,y,z+(side?-.1:.1),.82,.07,.04,style.trim);
+    cityBox(group,x,y-.56,z,.98,.12,.19,style.trim);
+    return pane;
+  };
+  window(-1.85,base+1.45,front+.07);
+  window(1.85,base+1.45,front+.07);
+  window(-1.85,base+3.03,front+.07);
+  window(1.85,base+3.03,front+.07);
+  cityBox(group,0,base+.98,front+.1,1.05,1.95,.18,style.door,true);
+  cityBox(group,0,base+1.96,front+.12,1.22,.13,.24,style.trim);
+  cityMesh(group,new THREE.SphereGeometry(.065,10,8),new THREE.MeshStandardMaterial({color:0xf4cc72,metalness:.45,roughness:.35}),.34,base+.98,front+.22);
+  cityBox(group,0,base+2.08,front+.1,.82,.16,.2,style.trim);
+  const chimney=cityBox(group,width*.28,base+height+.8,-depth*.12,.72,1.45,.72,style.trim,true);
+  chimney.rotation.z=-.12;
+  cityBox(group,0,-.045,front+2.05,1.15,.08,3.9,0xcdbeb2);
+  cityBox(group,-2.6,.24,front+.42,.56,.45,.5,style.trim,true);
+  cityBox(group,2.6,.24,front+.42,.56,.45,.5,style.trim,true);
+  cityMesh(group,new THREE.CylinderGeometry(.24,.24,.08,16),new THREE.MeshStandardMaterial({color:style.flower}),-2.6,.5,front+.42);
+  cityMesh(group,new THREE.CylinderGeometry(.24,.24,.08,16),new THREE.MeshStandardMaterial({color:style.flower}),2.6,.5,front+.42);
+  cityMesh(group,new THREE.BoxGeometry(1.25,.06,.24),new THREE.MeshStandardMaterial({color:style.trim}),0,base+2.6,front+.18);
+  cityMesh(group,new THREE.BoxGeometry(.42,.34,.06),new THREE.MeshStandardMaterial({color:style.trim}),-2.35,base+2.58,front+.2);
+  cityMesh(group,new THREE.BoxGeometry(.42,.34,.06),new THREE.MeshStandardMaterial({color:style.trim}),2.35,base+2.58,front+.2);
+  cityBox(group,-2.25,.36,front+.85,.22,.52,.22,0x5e493e,true);
+  cityBox(group,2.25,.36,front+.85,.22,.52,.22,0x5e493e,true);
+  const plaque=cityMesh(group,new THREE.BoxGeometry(.62,.35,.08),new THREE.MeshStandardMaterial({color:0xffedc4}),0,base+2.17,front+.22);
+  plaque.userData.houseNumber=String(index).padStart(2,'0');
+  const numberCanvas=document.createElement('canvas');numberCanvas.width=128;numberCanvas.height=64;
+  const numberContext=numberCanvas.getContext('2d');numberContext.fillStyle='#fff0cc';numberContext.fillRect(0,0,128,64);
+  numberContext.fillStyle='#493d4b';numberContext.font='bold 44px system-ui';numberContext.textAlign='center';numberContext.textBaseline='middle';
+  numberContext.fillText(String(index).padStart(2,'0'),64,33);
+  const numberTexture=new THREE.CanvasTexture(numberCanvas);numberTexture.encoding=THREE.sRGBEncoding;
+  cityMesh(group,new THREE.BoxGeometry(.5,.23,.025),new THREE.MeshBasicMaterial({map:numberTexture}),0,base+2.17,front+.276);
+  cityHomes.push({group,number:index});
+}
+addRoads();
+const houseStyles=[
+  {wall:0xf1b8ae,roof:0x80596d,trim:0xffe3bd,door:0x78536a,window:0xa8d9e8,flower:0xf3a4b3},
+  {wall:0xf4d99a,roof:0x536d8c,trim:0xfff0cc,door:0x52667c,window:0x9bd3e2,flower:0xe98e9d},
+  {wall:0xa9d2c2,roof:0x576b68,trim:0xe9f0d7,door:0x4c766d,window:0xa8dff0,flower:0xf2bc71},
+  {wall:0xc2b0e3,roof:0x634f7d,trim:0xf0e3ff,door:0x66527f,window:0xb8dffa,flower:0xe9a6c2},
+  {wall:0xf0c7a6,roof:0x9b6552,trim:0xffead1,door:0x9a5d50,window:0xa6d4e5,flower:0xed9b75},
+  {wall:0xaac7e8,roof:0x4d637f,trim:0xe5f2ff,door:0x526c91,window:0xa6e0e8,flower:0xe998b0},
+  {wall:0xe7abc0,roof:0x765468,trim:0xffe9e9,door:0x80556b,window:0xa5d8ed,flower:0xf5c275},
+  {wall:0xc8d89c,roof:0x68744f,trim:0xf3efd2,door:0x68734f,window:0xaddbe7,flower:0xeaa4a9},
+  {wall:0xf0d4c0,roof:0x806c61,trim:0xfff2df,door:0x806456,window:0xa6d8e6,flower:0xf1a9ba}
+];
+[
+  [-10,-13],[5,-13],[20,-13],[35,-13],
+  [-10,19],[5,19],[20,19],
+  [-10,3],[20,3]
+].forEach(([x,z],i)=>addAnimeHouse(x,z,houseStyles[i],i+2));
+function addSakuraTree(x,z,scale=1){
+  cityMesh(cityGroup,new THREE.CylinderGeometry(.13*scale,.2*scale,1.45*scale,8),mat(0x725341),x,.67*scale,z);
+  [[0,1.8,0],[.5,2.1,.1],[-.45,2.15,-.1],[.05,2.45,.1]].forEach(([dx,y,dz],i)=>{
+    cityMesh(cityGroup,new THREE.IcosahedronGeometry((1.05-i*.08)*scale,1),mat(i%2?0xf09db6:0xf6b3c5),x+dx*scale,y*scale,z+dz*scale);
+  });
+}
+[[-15,-7.65],[39,-7.65],[-15,8.35],[39,8.35],[-15,24.35],[39,24.35],[-15,-23.65],[39,-23.65]].forEach(([x,z],i)=>addSakuraTree(x,z,.72+(i%3)*.08));
+{
+  const roofMaterial=new THREE.MeshStandardMaterial({color:0x806076,roughness:.78});
+  const frontRoof=cityMesh(cityGroup,new THREE.BoxGeometry(11,.24,3.8),roofMaterial,5,6.23,1.52,true);
+  frontRoof.rotation.x=-.38;
+  const backRoof=cityMesh(cityGroup,new THREE.BoxGeometry(11,.24,3.8),roofMaterial,5,6.23,4.48,true);
+  backRoof.rotation.x=.38;
+  cityBox(cityGroup,5,6.08,0,10.3,.16,.12,0xffd9a8);
+}
+const homeDetails=[
+  {name:'La maison aux fleurs',kind:'Atelier fleuri',wall:0xf9e6d9,accent:0xe98e9d,feature:0x79a47a},
+  {name:'La maison du thé',kind:'Salon de thé',wall:0xf4e8bd,accent:0xb98062,feature:0x8caa75},
+  {name:'La maison des mélodies',kind:'Studio de musique',wall:0xe1d5f0,accent:0x785e97,feature:0xe0b758},
+  {name:'La maison des livres',kind:'Bibliothèque',wall:0xf0dfc7,accent:0x805843,feature:0xc99750},
+  {name:'La maison des nuages',kind:'Chambre cosy',wall:0xd9e8f4,accent:0x7596b7,feature:0xe8a9b5},
+  {name:'La maison des artistes',kind:'Atelier créatif',wall:0xf5dfcc,accent:0xc97858,feature:0xe2bb5c},
+  {name:'La maison des jeux',kind:'Salle de jeux',wall:0xe3e9c9,accent:0x71884d,feature:0xe8a05a},
+  {name:'La maison du soleil',kind:'Séjour lumineux',wall:0xf7e4a9,accent:0xd18450,feature:0x72a9a0},
+  {name:'La maison rose',kind:'Petit salon',wall:0xf3d7e2,accent:0xa96a83,feature:0x8eb399}
+];
+function addHomeInterior(home,details){
+  const room=new THREE.Group();
+  room.position.copy(home.group.position);
+  room.visible=false;cityGroup.add(room);
+  const box=(x,y,z,w,h,d,color)=>{
+    const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat(color));
+    mesh.position.set(x,y,z);mesh.castShadow=true;mesh.receiveShadow=true;room.add(mesh);
+    return mesh;
+  };
+  box(0,-.08,0,5.7,.16,5.5,details.wall);
+  box(0,1.58,-2.62,5.5,3.2,.16,details.wall);
+  box(-2.67,1.58,0,.16,3.2,5.2,details.wall);
+  box(2.67,1.58,0,.16,3.2,5.2,details.wall);
+  box(-1.78,1.58,2.62,1.78,3.2,.16,details.wall);
+  box(1.78,1.58,2.62,1.78,3.2,.16,details.wall);
+  box(0,2.98,2.62,1.8,.4,.16,details.wall);
+  box(0,1.18,2.53,1.12,2.36,.1,details.accent);
+  box(0,2.45,2.46,1.28,.14,.26,details.feature);
+  box(0,2.05,-2.5,1.5,1.05,.08,details.accent);
+  const glassPane=new THREE.Mesh(new THREE.PlaneGeometry(1.25,.8),new THREE.MeshBasicMaterial({color:details.feature}));
+  glassPane.position.set(0,2.05,-2.445);room.add(glassPane);
+  box(0,2.05,-2.42,.09,.87,.1,0xfff0cc);
+  box(0,2.05,-2.42,1.32,.08,.1,0xfff0cc);
+  box(0,1.53,-2.37,1.66,.13,.35,details.accent);
+  box(-1.8,1.15,-2.35,.72,2.25,.42,details.accent);
+  for(let shelf=0;shelf<4;shelf++){
+    box(-1.8,.42+shelf*.48,-2.1,.68,.055,.38,details.feature);
+    for(let book=0;book<3;book++){
+      const colors=[details.feature,details.accent,0xf2c14e];
+      box(-2.02+book*.2,.68+shelf*.48,-2.08,.12,.43,.27,colors[(book+shelf)%colors.length]);
+    }
+  }
+  box(1.55,.5,-2.28,1.15,.85,.58,details.feature);
+  box(1.55,.98,-2.28,1.25,.15,.65,details.accent);
+  box(1.55,1.12,-2.28,.72,.13,.38,0xfff0cc);
+  if(home.number===6){
+    box(0,.36,-.55,2.1,.42,1.35,details.accent);
+    box(0,.62,-.55,2.16,.14,1.42,details.feature);
+    box(-.56,.86,-.55,.62,.34,1.05,0xfff0cc);
+  }else{
+    box(0,.54,-.48,1.35,.13,.88,details.accent);
+    for(const x of [-.57,.57])for(const z of [-.82,-.14])box(x,.25,z,.08,.5,.08,details.feature);
+  }
+  box(1.96,.82,.86,.54,1.55,.52,details.accent);
+  box(1.96,1.62,.86,.6,.12,.58,details.feature);
+  box(-1.48,.55,.55,.45,.9,.45,details.feature);
+  const pot=new THREE.Mesh(new THREE.CylinderGeometry(.24,.18,.38,12),mat(details.accent));
+  pot.position.set(-1.48,.19,.55);room.add(pot);
+  for(const [x,y,z,r] of [[-1.6,1.08,.55,.46],[-1.2,1.23,.52,.36],[-1.48,1.46,.63,.3]]){
+    const leaf=new THREE.Mesh(new THREE.IcosahedronGeometry(r,1),mat(details.feature));
+    leaf.position.set(x,y,z);leaf.castShadow=true;room.add(leaf);
+  }
+  if(home.number===2){
+    const bloom=new THREE.Mesh(new THREE.IcosahedronGeometry(.2,1),mat(details.accent));
+    bloom.position.set(0,1.02,-.48);room.add(bloom);
+    for(const x of [-.24,.22]){
+      const petal=new THREE.Mesh(new THREE.SphereGeometry(.12,8,6),mat(details.feature));
+      petal.position.set(x,.96,-.48);room.add(petal);
+    }
+  }else if(home.number===3){
+    const teaPot=new THREE.Mesh(new THREE.CylinderGeometry(.13,.16,.22,12),mat(details.accent));
+    teaPot.position.set(.35,.91,-.48);room.add(teaPot);
+    box(.35,1.04,-.48,.24,.05,.22,0xfff0cc);
+    box(-.34,.9,-.48,.18,.04,.18,0xfff0cc);
+  }else if(home.number===4){
+    box(1.02,.76,-1.16,.8,.58,.38,details.accent);
+    for(let i=0;i<5;i++)box(.7+i*.16,.49,-.95,.11,.035,.23,0xfff0cc);
+    const guitar=new THREE.Mesh(new THREE.SphereGeometry(.33,12,10),mat(details.feature));
+    guitar.scale.set(.72,1.2,.3);guitar.position.set(-.82,.8,-1.25);room.add(guitar);
+    box(-.82,1.27,-1.25,.1,.76,.1,details.accent);
+  }else if(home.number===5){
+    box(1.5,1.14,-1.1,.82,.16,.18,details.feature);
+    box(1.5,.9,-1.1,.08,.56,.08,details.accent);
+  }else if(home.number===7){
+    box(-.1,1.2,-1.26,1.02,1.18,.08,details.feature);
+    box(-.1,1.2,-1.19,.82,.94,.06,0xfff0cc);
+    for(const x of [-.55,.35])box(x,.6,-1.24,.08,1.18,.08,details.accent);
+  }else if(home.number===8){
+    box(-.45,.78,-.92,.48,.48,.48,details.accent);
+    box(.18,.7,-.92,.42,.34,.42,details.feature);
+    const ball=new THREE.Mesh(new THREE.SphereGeometry(.21,12,10),mat(0xe86f75));
+    ball.position.set(.72,.75,-.92);room.add(ball);
+  }else if(home.number===9){
+    box(-.1,.58,.65,1.5,.72,.56,details.feature);
+    box(-.1,.98,.65,1.58,.12,.62,details.accent);
+    for(const x of [-.45,.15])box(x,.24,.65,.07,.45,.07,details.accent);
+  }else if(home.number===10){
+    box(-.95,1.08,-1.13,.72,1.04,.12,details.feature);
+    box(-.95,1.08,-1.05,.52,.78,.05,0xfff0cc);
+    box(-.95,.51,-1.15,.84,.12,.25,details.accent);
+  }
+  const light=new THREE.PointLight(details.feature,.75,9);
+  light.position.set(0,2.75,.4);room.add(light);
+  home.interior=room;home.details=details;
+}
+cityHomes.forEach((home,index)=>addHomeInterior(home,homeDetails[index]));
+const mainHouseTarget=new THREE.Mesh(
+  new THREE.BoxGeometry(10.4,5.4,6.5),
+  new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false})
+);
+mainHouseTarget.position.set(5,2.8,3);
+mainHouseTarget.userData.mainHouseTarget=true;
+cityGroup.add(mainHouseTarget);
 
 // Murs
 const WC=0xf0f0ee;
 function shell(){
-  bx(5,0,0,10.2,H,.2,WC);bx(5,0,6,10.2,H,.2,WC);bx(0,0,3,.2,H,6.2,WC);bx(10,0,3,.2,H,6.2,WC);
+  [bx(5,0,0,10.2,H,.2,WC),bx(5,0,6,10.2,H,.2,WC),bx(0,0,3,.2,H,6.2,WC),bx(10,0,3,.2,H,6.2,WC)].forEach(outlineBox);
 }
-function divider(x){bx(x,0,1.2,.2,H,2.4,WC);bx(x,0,4.8,.2,H,2.4,WC);bx(x,2.1,3,.2,.6,1.2,WC,false)}
+function divider(x){[bx(x,0,1.2,.2,H,2.4,WC),bx(x,0,4.8,.2,H,2.4,WC),bx(x,2.1,3,.2,.6,1.2,WC,false)].forEach(outlineBox)}
 function win(p,ax,w,h,y){
   const pane=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({color:0xd6ecff}));
   const bars=[[0,0,.06,h],[0,0,w,.06],[-w/2,0,.07,h],[w/2,0,.07,h],[0,-h/2,w,.07],[0,h/2,w,.07]];
@@ -139,6 +429,7 @@ function art(x,y,z,w,h,c,ax='z'){
 
 // ===== Rez-de-chaussée =====
 plane(0,4,0,6,0,tiles(4,6),gDown);plane(4,10,0,6,0,wood(6,6),gDown);
+floorBorder(.12,3.88,.12,5.88,.012,gDown);floorBorder(4.12,9.88,.12,5.88,.012,gDown);
 shell();divider(4);
 win(3,'z',1.2,1.1,1.1);win(5.3,'z',1.3,1.4,.9);win(7.3,'z',1.3,1.4,.9);win(3.1,'x',1.1,1.4,.9);
 // Cuisine
@@ -168,6 +459,8 @@ bx(8.55,0,3.1,.1,1,3.6,0xf0f0ee);
 // ===== Étage =====
 Y0=LV;
 slab(0,6,0,6,mat(0xaab4c0));slab(6,8.6,0,6,wood(1.3,3));slab(8.6,10,0,1.3,wood(.7,.65));slab(8.6,10,4.9,6,wood(.7,.55));
+floorBorder(.12,5.88,.12,5.88,LV+.012,gUp);floorBorder(6.12,8.48,.12,5.88,LV+.012,gUp);
+floorBorder(8.72,9.88,1.42,4.78,LV+.012,gUp);
 shell();divider(6);
 win(1.1,'z',1.2,1.3,.9);win(4.9,'z',1.2,1.3,.9);win(7.6,'z',1,1.3,.9);win(3.1,'x',1.1,1.4,.9);
 bx(8.55,0,3.1,.05,1,3.6,glass,true,false);bx(8.55,1,3.1,.08,.05,3.6,0x30353d,false);
@@ -201,11 +494,15 @@ const look=(px,pz,tx,tz)=>Math.atan2(-(tx-px),-(tz-pz));
 const P={
   cuisine:{x:3.3,z:5.3,y:1.6,yaw:look(3.3,5.3,1.5,1),pitch:-.05,l:0},
   salon:{x:4.9,z:1.5,y:1.6,yaw:look(4.9,1.5,8,4.6),pitch:-.08,l:0},
-  chambre:{x:5.3,z:3,y:LV+1.6,yaw:look(5.3,3,2.5,.8),pitch:-.05,l:1}
+  chambre:{x:5.3,z:3,y:LV+1.6,yaw:look(5.3,3,2.5,.8),pitch:-.05,l:1},
+  palier:{x:7.4,z:5.4,y:LV+1.6,yaw:look(7.4,5.4,9.4,5.2),pitch:-.05,l:1},
+  escalier:{x:9.3,z:3.1,y:1.6,yaw:look(9.3,3.1,8.8,4.9),pitch:-.08,l:0}
 };
 const topY=()=>Math.max(9.5,9.5/cam.aspect+1);
 const topPose=l=>({x:5,z:3.2,y:topY()+l*LV,yaw:0,pitch:-1.5,l});
+const cityPose=()=>({x:12.5,z:3,y:Math.max(45,44/cam.aspect),yaw:0,pitch:-1.5,l:0});
 const INFO={
+  quartier:['Le quartier','10 maisons · Allée des Sakura','Cliquez sur n’importe quelle maison pour en visiter l’intérieur. Utilisez ensuite les flèches pour passer de maison en maison.'],
   top0:['Plan du rez-de-chaussée','Cuisine et salon · 60 m²','Cliquez sur une pièce pour la visiter. L’escalier est à droite.'],
   top1:['Plan de l’étage','Chambre et palier · 60 m²','Cliquez sur la chambre pour la visiter. L’escalier arrive sur le palier.'],
   cuisine:['Cuisine','24 m²','Plan de travail en L, îlot central et trois tabourets.'],
@@ -216,12 +513,124 @@ const INFO={
 };
 
 let cur={...topPose(0)},mode='top0',tw=null,shown='',foot=0;
+let selectedHome=0;
 const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
 const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+const status=$('#status');
+let guidedTour=false,guidedTourIndex=0,guidedTourTimer=null;
+const tourSequence=['salon','cuisine','chambre','palier','salon'];
+const toast=$('#toast');
+let toastTimer=null;
+const hint=$('#hint');
+function announce(message){
+  toast.textContent=message;
+  toast.classList.add('show');
+  if(toastTimer)clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>toast.classList.remove('show'),2600);
+}
+function updateStatusLabel(){
+  if(!status)return;
+  const roomLabel = INFO[shown] ? INFO[shown][0] : 'Maison';
+  if(selectedHome&&mode==='house'){
+    status.style.display='none';
+    return;
+  }
+  if(selectedHome&&mode==='walk'){
+    status.style.display='none';
+    return;
+  }
+  if(guidedTour){
+    status.style.display='block';
+    status.textContent=`Visite guidée · ${roomLabel}`;
+    return;
+  }
+  if(mode==='walk'){
+    status.style.display='block';
+    status.textContent=`Mode libre · ${place()}`;
+    return;
+  }
+  status.style.display='none';
+}
+function setTheme(theme){
+  document.documentElement.dataset.theme=theme;
+  const isDark=theme==='dark';
+  $('#themeToggle').textContent=isDark?'Jour':'Nuit';
+  localStorage.setItem('maisonTheme',theme);
+}
+async function toggleFullscreen(){
+  if(!document.fullscreenEnabled){
+    announce('Le plein écran n’est pas disponible dans ce navigateur.');
+    return;
+  }
+  try{
+    if(document.fullscreenElement)await document.exitFullscreen();
+    else await document.documentElement.requestFullscreen();
+  }catch(error){
+    console.error('Impossible de changer le mode plein écran.',error);
+    announce('Impossible d’activer le plein écran. Vérifiez les autorisations du navigateur.');
+  }
+}
+function setGuidedTour(active){
+  guidedTour=active;
+  if(!active){
+    if(guidedTourTimer){clearInterval(guidedTourTimer);guidedTourTimer=null;}
+    $('#tourBtn').textContent='Visite guidée';
+    updateStatusLabel();
+    return;
+  }
+  guidedTourIndex=0;
+  $('#tourBtn').textContent='Arrêter';
+  if(guidedTourTimer)clearInterval(guidedTourTimer);
+  go(tourSequence[guidedTourIndex]);
+  guidedTourTimer=setInterval(()=>{
+    if(!guidedTour)return;
+    guidedTourIndex=(guidedTourIndex+1)%tourSequence.length;
+    go(tourSequence[guidedTourIndex]);
+  },3600);
+  updateStatusLabel();
+}
 function go(k){
-  const to=k.startsWith('top')?topPose(+k[3]):P[k];
+  if(k==='quartier'){
+    selectedHome=0;
+    cityHomes.forEach(home=>{home.group.visible=true;home.interior.visible=false;});
+    cityGroup.visible=true;
+    $('#houseNav').style.display='none';
+  }else{
+    selectedHome=0;
+    cityHomes.forEach(home=>{home.group.visible=true;home.interior.visible=false;});
+    cityGroup.visible=false;
+    $('#houseNav').style.display='none';
+  }
+  const to=k.startsWith('top')?topPose(+k[3]):k==='quartier'?cityPose():P[k];
   tw={from:{...cur},to,t:0,dur:reduce?.01:2};
-  mode=k.startsWith('top')?k:'walk';
+  mode=k.startsWith('top')||k==='quartier'?k:'walk';
+  hint.textContent=k==='quartier'
+    ?'Cliquez sur une maison pour la visiter · cliquez sur « Quartier » pour revenir'
+    :'Glissez pour regarder · Z Q S D ou flèches pour marcher · l’escalier se monte à pied';
+}
+function visitHouse(index){
+  if(!Number.isInteger(index)||index<1||index>cityHomes.length+1)return;
+  setGuidedTour(false);
+  shown='';
+  selectedHome=index;
+  $('#houseNav').style.display='flex';
+  $('#houseCount').textContent=`Maison ${String(index).padStart(2,'0')} / 10`;
+  hint.textContent='Glissez pour explorer l’intérieur · utilisez les flèches pour changer de maison';
+  cityHomes.forEach(home=>{home.group.visible=true;home.interior.visible=false;});
+  if(index===1){
+    cityGroup.visible=false;
+    mode='walk';lvl=0;
+    tw={from:{...cur},to:P.salon,t:0,dur:reduce?.01:2};
+    return;
+  }
+  const home=cityHomes[index-2];
+  home.group.visible=false;
+  home.interior.visible=true;
+  cityGroup.visible=true;
+  const {x,z}=home.group.position;
+  const destination={x,y:1.55,z:z+1.75,yaw:0,pitch:-.04,l:0};
+  mode='house';lvl=0;
+  tw={from:{...cur},to:destination,t:0,dur:reduce?.01:2};
 }
 function place(){
   if(inSt(cur.x,cur.z))return 'escalier';
@@ -230,26 +639,67 @@ function place(){
 }
 function hud(k){
   if(k===shown)return;shown=k;
-  const i=INFO[k];$('#info h2').textContent=i[0];$('#info .m').textContent=i[1];$('#info p').textContent=i[2];
-  document.querySelectorAll('#bar button').forEach(b=>b.classList.toggle('on',b.dataset.r===k));
+  if(k==='house'&&selectedHome>1){
+    const home=cityHomes[selectedHome-2];
+    $('#info h2').textContent=home.details.name;
+    $('#info .m').textContent=`Maison ${String(selectedHome).padStart(2,'0')} · ${home.details.kind}`;
+    $('#info p').textContent='Regardez autour de vous en glissant sur l’écran. Utilisez les boutons pour découvrir les autres maisons.';
+  }else{
+    const i=INFO[k];$('#info h2').textContent=i[0];$('#info .m').textContent=i[1];$('#info p').textContent=i[2];
+  }
+  document.querySelectorAll('#bar button').forEach(b=>{
+    const active=b.dataset.r===k;
+    b.classList.toggle('on',active);
+    b.setAttribute('aria-pressed',String(active));
+  });
 }
-document.querySelectorAll('#bar button').forEach(b=>b.onclick=()=>go(b.dataset.r));
-$('#go').onclick=()=>{$('#intro').classList.add('off');go('salon')};
+document.querySelectorAll('#bar button').forEach(b=>b.onclick=()=>{setGuidedTour(false);go(b.dataset.r);});
+$('#go').onclick=()=>{$('#intro').classList.add('off');setGuidedTour(false);go('quartier')};
+$('#themeToggle').onclick=()=>setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');
+$('#tourBtn').onclick=()=>setGuidedTour(!guidedTour);
+$('#fullscreenBtn').onclick=toggleFullscreen;
+$('#prevHouse').onclick=()=>visitHouse(selectedHome===1?10:selectedHome-1);
+$('#nextHouse').onclick=()=>visitHouse(selectedHome===10?1:selectedHome+1);
+$('#neighborhoodBtn').onclick=()=>go('quartier');
+document.addEventListener('fullscreenchange',()=>{
+  const active=Boolean(document.fullscreenElement);
+  $('#fullscreenBtn').textContent=active?'Quitter plein écran':'Plein écran';
+  $('#fullscreenBtn').setAttribute('aria-label',active?'Quitter le plein écran':'Passer en plein écran');
+});
+const savedTheme=localStorage.getItem('maisonTheme')||'light';
+setTheme(savedTheme);
 
 const keys={};
-addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=1;if(e.key.startsWith('Arrow'))e.preventDefault()});
+addEventListener('keydown',e=>{
+  const key=e.key.toLowerCase();
+  keys[key]=1;
+  if(key==='m'){setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');}
+  if(key==='v'){setGuidedTour(!guidedTour);}
+  if(key==='p'){if(mode==='walk'){go('top0');}else{go(mode==='top0'?'top1':'top0');}}
+  if(e.key.startsWith('Arrow'))e.preventDefault();
+});
 addEventListener('keyup',e=>keys[e.key.toLowerCase()]=0);
 let drag=null,pad={f:0};
 canvas.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY};canvas.setPointerCapture(e.pointerId);canvas.style.cursor='grabbing'});
 canvas.addEventListener('pointermove',e=>{
-  if(!drag||mode!=='walk'||tw)return;
+  if(!drag||(mode!=='walk'&&mode!=='house')||tw)return;
   cur.yaw-=(e.clientX-drag.x)*.005;cur.pitch=Math.max(-1.2,Math.min(1.2,cur.pitch-(e.clientY-drag.y)*.005));
   drag.x=e.clientX;drag.y=e.clientY;
 });
 const ray=new THREE.Raycaster();
 canvas.addEventListener('pointerup',e=>{
   canvas.style.cursor='grab';
-  if(drag&&mode!=='walk'&&!tw&&Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)<6){
+  if(drag&&mode==='quartier'&&!tw&&Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)<6){
+    ray.setFromCamera({x:e.clientX/innerWidth*2-1,y:-(e.clientY/innerHeight)*2+1},cam);
+    const targets=[mainHouseTarget,...cityHomes.map(home=>home.group)];
+    const hit=ray.intersectObjects(targets,true)[0];
+    if(hit){
+      let owner=hit.object;
+      while(owner&&owner!==cityGroup&&!owner.userData.houseIndex&&!owner.userData.mainHouseTarget)owner=owner.parent;
+      if(owner?.userData.mainHouseTarget)visitHouse(1);
+      else if(owner?.userData.houseIndex)visitHouse(owner.userData.houseIndex);
+    }
+  }else if(drag&&mode.startsWith('top')&&!tw&&Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)<6){
     ray.setFromCamera({x:e.clientX/innerWidth*2-1,y:-(e.clientY/innerHeight)*2+1},cam);
     const o=ray.ray.origin,d=ray.ray.direction,l=+mode[3],t=(l*LV-o.y)/d.y,x=o.x+d.x*t,z=o.z+d.z*t;
     if(x>0&&x<10&&z>0&&z<6){if(l===0)go(x<4?'cuisine':'salon');else if(x<6)go('chambre')}
@@ -261,18 +711,54 @@ canvas.addEventListener('pointerup',e=>{
 // Mini-plan
 const mg=$('#map canvas').getContext('2d'),S=30;
 function drawMap(){
+  if(mode==='quartier'||mode==='house'){
+    const mapX=x=>(x+17)*3.9+22;
+    const mapZ=z=>(27-z)*3.45+5;
+    mg.clearRect(0,0,300,180);
+    mg.fillStyle='#9bb37e';mg.fillRect(0,0,300,180);
+    mg.fillStyle='#454954';
+    [-21,-5,11,27].forEach(z=>mg.fillRect(0,mapZ(z)-8,300,16));
+    [-17.5,-2.5,12.5,27.5,42.5].forEach(x=>mg.fillRect(mapX(x)-9,0,18,180));
+    mg.fillStyle='#e4cfc1';
+    [-21,-5,11,27].forEach(z=>mg.fillRect(0,mapZ(z)-10,300,2));
+    [-17.5,-2.5,12.5,27.5,42.5].forEach(x=>mg.fillRect(mapX(x)-11,0,2,180));
+    mg.fillStyle='#f0c7a6';
+    cityHomes.forEach(home=>{
+      const {x,z}=home.group.position;
+      mg.fillStyle=selectedHome===home.number?'#f2c14e':'#f0c7a6';
+      mg.fillRect(mapX(x)-13,mapZ(z)-10,26,20);
+    });
+    mg.fillStyle='#e9ece5';mg.fillRect(mapX(5)-20,mapZ(3)-11,40,22);
+    mg.fillStyle='#f2c14e';mg.beginPath();mg.arc(mapX(5),mapZ(3),5,0,Math.PI*2);mg.fill();
+    mg.fillStyle='#17202b';mg.font='800 9px system-ui';mg.textAlign='left';mg.textBaseline='top';mg.fillText('CITÉ · 10 MAISONS',7,7);
+    return;
+  }
   const up=cur.y>3.6&&(mode==='walk'||mode==='top1'||tw);
   mg.clearRect(0,0,300,180);
   const r=up?[[0,6,'#9aa8b8'],[6,10,'#c9a97c']]:[[0,4,'#e8ecef'],[4,10,'#c9a97c']];
   r.forEach(([a,b,c])=>{mg.fillStyle=c;mg.fillRect(a*S,0,(b-a)*S,180);mg.strokeStyle='#17202b';mg.lineWidth=4;mg.strokeRect(a*S,0,(b-a)*S,180)});
+  mg.strokeStyle='rgba(23,32,43,.62)';mg.lineWidth=2;
+  mg.beginPath();mg.moveTo((up?6:4)*S,0);mg.lineTo((up?6:4)*S,180);mg.stroke();
   mg.fillStyle='rgba(23,32,43,.35)';mg.fillRect(8.6*S,1.3*S,1.3*S,3.6*S);
   mg.strokeStyle='rgba(23,32,43,.5)';mg.lineWidth=1.5;for(let i=1;i<14;i++){const y=(1.3+i*3.6/14)*S;mg.beginPath();mg.moveTo(8.6*S,y);mg.lineTo(9.9*S,y);mg.stroke()}
+  mg.fillStyle='rgba(23,32,43,.78)';mg.font='600 12px system-ui';mg.textAlign='center';mg.textBaseline='middle';
+  if(up){
+    mg.fillText('CHAMBRE',90,86);mg.fillText('PALIER',218,82);mg.fillText('ESC.',278,90);
+    mg.fillStyle='rgba(23,32,43,.7)';mg.font='800 9px system-ui';mg.textAlign='left';mg.fillText('ÉTAGE',8,12);
+  }else{
+    mg.fillText('CUISINE',60,88);mg.fillText('SALON',210,88);mg.fillText('ESC.',278,90);
+    mg.fillStyle='rgba(23,32,43,.7)';mg.font='800 9px system-ui';mg.textAlign='left';mg.fillText('REZ-DE-CHAUSSÉE',8,12);
+  }
   const px=cur.x*S,pz=cur.z*S;
   mg.fillStyle='rgba(242,193,78,.55)';mg.beginPath();mg.moveTo(px,pz);mg.arc(px,pz,34,-Math.PI/2-cur.yaw-.6,-Math.PI/2-cur.yaw+.6);mg.closePath();mg.fill();
   mg.fillStyle='#f2c14e';mg.strokeStyle='#17202b';mg.lineWidth=3;mg.beginPath();mg.arc(px,pz,7,0,7);mg.fill();mg.stroke();
 }
 
-function resize(){renderer.setSize(innerWidth,innerHeight,false);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();if(mode!=='walk'&&!tw)Object.assign(cur,topPose(+mode[3]))}
+function resize(){
+  renderer.setSize(innerWidth,innerHeight,false);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();
+  if(!tw&&mode==='quartier')Object.assign(cur,cityPose());
+  else if(mode.startsWith('top')&&!tw)Object.assign(cur,topPose(+mode[3]));
+}
 addEventListener('resize',resize);resize();
 
 let last=performance.now();
@@ -296,9 +782,11 @@ function loop(now){
     cur.y=foot+1.6;
   }
   gUp.visible=mode!=='top0';
-  gRoof.visible=mode==='walk'&&cur.y<6.2;
+  gRoof.visible=(mode==='walk'&&cur.y<6.2)||mode==='quartier'||mode==='house';
+  cityGroup.visible=mode==='quartier';
   cam.position.set(cur.x,cur.y,cur.z);cam.rotation.set(cur.pitch,cur.yaw,0);
-  hud(mode==='walk'&&!tw?place():mode==='walk'?shown:mode);
+  hud(mode==='house'?'house':mode==='walk'&&!tw?place():mode==='walk'?shown:mode);
+  updateStatusLabel();
   drawMap();
   renderer.render(scene,cam);
   requestAnimationFrame(loop);
