@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Maison 3 pièces — visite 3D</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap">
+<style>
+:root{--bg:#dfe6ec;--ink:#17202b;--paper:#f3f5f7;--sun:#f2c14e;--sage:#6d8b7a;color-scheme:light dark}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10161d}}
+:root[data-theme="dark"]{--bg:#10161d}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);font-family:"Bricolage Grotesque",system-ui,sans-serif;color:var(--paper);overflow:hidden}
+canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+.glass{background:rgba(23,32,43,.84);backdrop-filter:blur(8px);border-radius:14px}
+#info{position:fixed;left:14px;top:calc(14px + env(safe-area-inset-top,0px));max-width:min(340px,60vw);padding:14px 18px}
+#info h2{margin:0;font-size:1.7rem;font-weight:800;letter-spacing:-.02em}
+#info .m{margin:2px 0 6px;color:var(--sun);font-weight:600}
+#info p{margin:0;font-size:.95rem;line-height:1.45;opacity:.9}
+#map{position:fixed;right:14px;top:calc(14px + env(safe-area-inset-top,0px));padding:8px}
+#map canvas{display:block;width:154px;height:66px}
+#bar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom,0px));display:flex;gap:6px;padding:6px;max-width:calc(100vw - 20px)}
+#bar button{font:inherit;font-weight:600;font-size:.95rem;color:var(--paper);background:transparent;border:0;border-radius:10px;padding:10px 14px;cursor:pointer;white-space:nowrap}
+#bar button:hover{background:rgba(255,255,255,.1)}
+#bar button.on{background:var(--sun);color:var(--ink)}
+button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+#hint{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(78px + env(safe-area-inset-bottom,0px));font-size:.85rem;padding:6px 12px;opacity:.9;white-space:nowrap}
+#pad{display:none;position:fixed;right:14px;bottom:calc(84px + env(safe-area-inset-bottom,0px));flex-direction:column;gap:8px}
+#pad button{width:58px;height:58px;font-size:1.4rem;border:0;border-radius:50%;background:rgba(23,32,43,.84);color:var(--paper);touch-action:none}
+@media (pointer:coarse){#pad{display:flex}#hint{display:none}}
+#intro{position:fixed;inset:0;display:flex;align-items:flex-end;padding:20px;background:linear-gradient(90deg,rgba(16,22,29,.75),rgba(16,22,29,0) 70%)}
+#intro .card{max-width:430px;padding:26px 28px;margin-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+#intro h1{margin:0 0 8px;font-size:clamp(2rem,6vw,3rem);line-height:1;font-weight:800;letter-spacing:-.03em}
+#intro p{margin:0 0 18px;line-height:1.5;opacity:.9}
+#go{font:inherit;font-weight:800;font-size:1.05rem;background:var(--sun);color:var(--ink);border:0;border-radius:12px;padding:13px 22px;cursor:pointer}
+#intro.off{display:none}
+@media (max-width:560px){#bar button{padding:9px 10px;font-size:.85rem}#info h2{font-size:1.3rem}#info p{display:none}#map canvas{width:110px;height:47px}}
+</style>
+</head>
+<body>
+<canvas id="c" aria-label="Visite 3D de la maison"></canvas>
+<div id="info" class="glass"><h2></h2><div class="m"></div><p></p></div>
+<div id="map" class="glass"><canvas width="308" height="132"></canvas></div>
+<div id="hint" class="glass">Glissez pour regarder · Z Q S D ou flèches pour marcher</div>
+<div id="pad"><button id="pf" aria-label="Avancer">▲</button><button id="pb" aria-label="Reculer">▼</button></div>
+<div id="bar" class="glass">
+<button data-r="top">Vue d’ensemble</button><button data-r="cuisine">Cuisine</button><button data-r="salon">Salon</button><button data-r="chambre">Chambre</button>
+</div>
+<div id="intro"><div class="card glass">
+<h1>Maison 3 pièces</h1>
+<p>Cuisine, salon et chambre sur 84 m². Entrez, marchez de pièce en pièce, ou cliquez sur une pièce depuis la vue d’ensemble.</p>
+<button id="go">Commencer la visite</button></div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+const canvas=$('#c');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0xcfd9e2);
+const cam=new THREE.PerspectiveCamera(70,1,.05,100);
+cam.rotation.order='YXZ';
+
+scene.add(new THREE.HemisphereLight(0xffffff,0x8a7f72,.75));
+const sun=new THREE.DirectionalLight(0xfff4e0,.35);sun.position.set(5,10,-4);scene.add(sun);
+[[2,3],[7,3],[12,3]].forEach(([x,z])=>{const l=new THREE.PointLight(0xffe9c4,.55,9);l.position.set(x,2.4,z);scene.add(l)});
+
+const mats={};
+const mat=c=>mats[c]||(mats[c]=new THREE.MeshStandardMaterial({color:c,roughness:.85,metalness:0}));
+const solids=[];
+function bx(x,y,z,w,h,d,c,col=true){
+  const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),typeof c==='object'?c:mat(c));
+  m.position.set(x,y+h/2,z);scene.add(m);
+  if(col)solids.push({x1:x-w/2,x2:x+w/2,z1:z-d/2,z2:z+d/2});
+  return m;
+}
+function cy(x,y,z,r,h,c,col=false){
+  const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,16),mat(c));
+  m.position.set(x,y+h/2,z);scene.add(m);
+  if(col)solids.push({x1:x-r,x2:x+r,z1:z-r,z2:z+r});
+}
+function tex(draw,rx,rz){
+  const c=document.createElement('canvas');c.width=c.height=256;draw(c.getContext('2d'));
+  const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rx,rz);t.anisotropy=4;
+  return new THREE.MeshStandardMaterial({map:t,roughness:.8});
+}
+const wood=(rx,rz)=>tex(g=>{for(let i=0;i<8;i++){g.fillStyle=`hsl(30,${36+i%3*5}%,${50+i%4*3}%)`;g.fillRect(0,i*32,256,32);g.fillStyle='rgba(0,0,0,.25)';g.fillRect(0,i*32,256,2)}},rx,rz);
+const tiles=(rx,rz)=>tex(g=>{g.fillStyle='#e8ecef';g.fillRect(0,0,256,256);g.strokeStyle='#bcc6ce';g.lineWidth=4;g.strokeRect(0,0,256,256);g.beginPath();g.moveTo(128,0);g.lineTo(128,256);g.moveTo(0,128);g.lineTo(256,128);g.stroke()},rx,rz);
+const carpet=()=>mat(0x9aa8b8);
+
+// Pièces : cuisine x0-4, salon x4-10, chambre x10-14, profondeur 6
+const rooms=[
+ {k:'cuisine',x1:0,x2:4,floor:tiles(4,6)},
+ {k:'salon',x1:4,x2:10,floor:wood(6,6)},
+ {k:'chambre',x1:10,x2:14,floor:carpet()}
+];
+const floors=[],ceilings=[];
+rooms.forEach((r,i)=>{
+  const w=r.x2-r.x1,cx=(r.x1+r.x2)/2;
+  const f=new THREE.Mesh(new THREE.PlaneGeometry(w,6),r.floor);f.rotation.x=-Math.PI/2;f.position.set(cx,0,3);f.userData.room=r.k;scene.add(f);floors.push(f);
+  const c=new THREE.Mesh(new THREE.PlaneGeometry(w,6),mat(0xf6f6f4));c.rotation.x=Math.PI/2;c.position.set(cx,2.8,3);scene.add(c);ceilings.push(c);
+});
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(80,80),mat(0xaebba5));ground.rotation.x=-Math.PI/2;ground.position.set(7,-.02,3);scene.add(ground);
+
+// Murs
+const WC=0xeceeed,H=2.8;
+bx(7,0,-.0,14.4,H,.2,WC);bx(7,0,6,14.4,H,.2,WC);bx(0,0,3,.2,H,6.2,WC);bx(14,0,3,.2,H,6.2,WC);
+[4,10].forEach(x=>{
+  bx(x,0,1.2,.2,H,2.4,WC);bx(x,0,4.8,.2,H,2.4,WC);bx(x,2.1,3,.2,.7,1.2,WC,false);
+});
+// Fenêtres
+function win(x,z,axis,w,h,y){
+  const pane=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({color:0xc4e4ff}));
+  if(axis==='z'){pane.position.set(x,y+h/2,.105);scene.add(pane);bx(x,y,.115,.05,h,.02,0xffffff,false);bx(x,y+h/2,.115,w,.05,.02,0xffffff,false)}
+  else{pane.rotation.y=-Math.PI/2;pane.position.set(13.895,y+h/2,z);scene.add(pane);bx(13.885,y,z,.02,h,.05,0xffffff,false);bx(13.885,y+h/2,z,.02,.05,w,0xffffff,false)}
+}
+win(3,0,'z',1.2,1.1,1.1);win(5.2,0,'z',1.2,1.4,.9);win(8.8,0,'z',1.2,1.4,.9);win(0,3,'x',1.4,1.3,.9);
+bx(7,0,5.89,5.8,H,.02,0x6d8b7a,false);bx(12,0,.11,3.8,H,.02,0x8aa4c2,false);
+
+// Cuisine
+bx(2,0,.4,3.8,.9,.7,0xf1f1ee);bx(2,.9,.4,3.8,.05,.74,0x3a3f47,false);
+bx(1.05,1.5,.2,1.9,.7,.4,0xe9c46a);
+bx(.4,0,2.6,.7,.9,3.8,0xf1f1ee);bx(.4,.9,2.6,.74,.05,3.8,0x3a3f47,false);
+bx(.4,0,5.3,.7,1.9,.9,0xcfd6dc);
+bx(2.5,0,3.4,1.6,.9,.9,0x2f6f73);bx(2.5,.9,3.4,1.7,.05,1,0xd9d4cb,false);
+[1.9,2.5,3.1].forEach(x=>{cy(x,0,4.25,.17,.05,0x3a3f47);cy(x,0,4.25,.02,.6,0x888888);cy(x,.6,4.25,.2,.06,0xe9c46a)});
+bx(2.2,.95,.4,.6,.02,.4,0x222a33,false);
+
+// Salon
+bx(7,0,3.7,3.6,.02,2.6,0x41576b,false);
+bx(7,0,.3,2.2,.45,.5,0x5b4636);bx(7,.7,.12,1.7,.95,.06,0x111418,false);
+bx(7,0,4.6,2.4,.4,.95,0x6d8b7a);bx(7,.4,5.05,2.4,.55,.25,0x5d7a6a,false);
+bx(5.9,0,4.6,.25,.65,.95,0x5d7a6a,false);bx(8.1,0,4.6,.25,.65,.95,0x5d7a6a,false);
+bx(7,0,3.0,1.2,.4,.6,0x8a6a4c);
+bx(4.3,0,5.2,.35,2,1.4,0x5b4636);
+cy(9.3,0,5.3,.25,.4,0xb9856a);bx(9.3,.4,5.3,.5,.6,.5,0x4f8a5b,false);
+cy(9.3,0,.7,.15,.05,0x333333);cy(9.3,0,.7,.02,1.5,0x333333);cy(9.3,1.5,.7,.2,.25,0xfff0c8);
+
+// Chambre
+bx(12,0,1.25,1.8,.45,2,0xf1f1ee);bx(12,.45,1.55,1.8,.1,1.4,0x6b86a8,false);
+bx(12,.45,.2,1.9,.95,.1,0x5b4636,false);
+bx(11.5,.55,.6,.6,.12,.35,0xffffff,false);bx(12.5,.55,.6,.6,.12,.35,0xffffff,false);
+bx(10.75,0,.4,.5,.5,.5,0x8a6a4c);bx(13.25,0,.4,.5,.5,.5,0x8a6a4c);
+bx(12,0,5.65,2.4,2.2,.6,0xe4dfd6);
+bx(10.35,0,5,.6,.75,1.2,0x8a6a4c);bx(10.4,.9,5,.05,.3,.4,0x222a33,false);
+bx(12,0,3.6,2.4,.02,1.8,0x6b86a8,false);
+
+// Collision
+const R=.3;
+const blocked=(x,z)=>solids.some(s=>x>s.x1-R&&x<s.x2+R&&z>s.z1-R&&z<s.z2+R);
+
+// Poses
+const look=(px,pz,tx,tz)=>Math.atan2(-(tx-px),-(tz-pz));
+const P={
+  cuisine:{x:3.3,z:5.3,y:1.6,yaw:look(3.3,5.3,1.5,1),pitch:-.05},
+  salon:{x:4.9,z:1.5,y:1.6,yaw:look(4.9,1.5,8,4.5),pitch:-.08},
+  chambre:{x:10.7,z:3,y:1.6,yaw:look(10.7,3,12.3,1),pitch:-.05}
+};
+const topPose=()=>({x:7,z:3.2,y:Math.max(6.5,11/(cam.aspect)),yaw:0,pitch:-1.5});
+const INFO={
+  top:['Vue d’ensemble','84 m² · 3 pièces','Cliquez sur une pièce pour la visiter, ou utilisez les boutons en bas.'],
+  cuisine:['Cuisine','24 m²','Plan de travail en L, îlot central et trois tabourets.'],
+  salon:['Salon','36 m²','Pièce de vie lumineuse avec deux fenêtres, canapé, coin télé et bibliothèque.'],
+  chambre:['Chambre','24 m²','Lit double, grande armoire, bureau et fenêtre côté jardin.']
+};
+
+let cur={x:7,z:3.2,y:12,yaw:0,pitch:-1.5},mode='top',tw=null,shown='';
+const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+function go(k){
+  const to=k==='top'?topPose():P[k];
+  tw={from:{...cur},to,t:0,dur:reduce?.01:1.8};
+  mode=k==='top'?'top':'walk';
+}
+function roomAt(x){return x<4?'cuisine':x<10?'salon':'chambre'}
+function hud(k){
+  if(k===shown)return;shown=k;
+  const i=INFO[k];$('#info h2').textContent=i[0];$('#info .m').textContent=i[1];$('#info p').textContent=i[2];
+  document.querySelectorAll('#bar button').forEach(b=>b.classList.toggle('on',b.dataset.r===k));
+}
+document.querySelectorAll('#bar button').forEach(b=>b.onclick=()=>go(b.dataset.r));
+$('#go').onclick=()=>{$('#intro').classList.add('off');go('salon')};
+
+// Entrées
+const keys={};
+addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=1;if(e.key.startsWith('Arrow'))e.preventDefault()});
+addEventListener('keyup',e=>keys[e.key.toLowerCase()]=0);
+let drag=null,pad={f:0};
+canvas.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY};canvas.setPointerCapture(e.pointerId);canvas.style.cursor='grabbing'});
+canvas.addEventListener('pointermove',e=>{
+  if(!drag||mode!=='walk'||tw)return;
+  cur.yaw-=(e.clientX-drag.x)*.005;cur.pitch=Math.max(-1.2,Math.min(1.2,cur.pitch-(e.clientY-drag.y)*.005));
+  drag.x=e.clientX;drag.y=e.clientY;
+});
+const ray=new THREE.Raycaster();
+canvas.addEventListener('pointerup',e=>{
+  canvas.style.cursor='grab';
+  if(drag&&mode==='top'&&!tw&&Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)<6){
+    ray.setFromCamera({x:e.clientX/innerWidth*2-1,y:-(e.clientY/innerHeight)*2+1},cam);
+    const h=ray.intersectObjects(floors)[0];if(h)go(h.object.userData.room);
+  }
+  drag=null;
+});
+[['#pf',1],['#pb',-1]].forEach(([s,v])=>{const b=$(s);b.onpointerdown=e=>{e.preventDefault();pad.f=v};b.onpointerup=b.onpointerleave=b.onpointercancel=()=>pad.f=0});
+
+// Mini-plan
+const mc=$('#map canvas'),mg=mc.getContext('2d'),S=22;
+function drawMap(){
+  mg.clearRect(0,0,308,132);
+  const cols=['#e8ecef','#d8c3a0','#9aa8b8'];
+  rooms.forEach((r,i)=>{mg.fillStyle=cols[i];mg.fillRect(r.x1*S,0,(r.x2-r.x1)*S,132);mg.strokeStyle='#17202b';mg.lineWidth=3;mg.strokeRect(r.x1*S,0,(r.x2-r.x1)*S,132)});
+  const px=cur.x*S,pz=cur.z*S*(132/132);
+  const a=cur.yaw;
+  mg.fillStyle='rgba(242,193,78,.5)';mg.beginPath();mg.moveTo(px,pz);
+  mg.arc(px,pz,26,-Math.PI/2-a-.6,-Math.PI/2-a+.6);mg.closePath();mg.fill();
+  mg.fillStyle='#f2c14e';mg.strokeStyle='#17202b';mg.lineWidth=2;mg.beginPath();mg.arc(px,pz,6,0,7);mg.fill();mg.stroke();
+}
+
+function resize(){renderer.setSize(innerWidth,innerHeight,false);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();if(mode==='top'&&!tw)Object.assign(cur,topPose())}
+addEventListener('resize',resize);resize();Object.assign(cur,topPose());
+
+let last=performance.now();
+function loop(now){
+  const dt=Math.min(.05,(now-last)/1000);last=now;
+  if(tw){
+    tw.t+=dt/tw.dur;const k=ease(Math.min(1,tw.t)),f=tw.from,t=tw.to;
+    const dy=((t.yaw-f.yaw+Math.PI)%(2*Math.PI)+2*Math.PI)%(2*Math.PI)-Math.PI;
+    cur.x=f.x+(t.x-f.x)*k;cur.z=f.z+(t.z-f.z)*k;cur.y=f.y+(t.y-f.y)*k;cur.yaw=f.yaw+dy*k;cur.pitch=f.pitch+(t.pitch-f.pitch)*k;
+    if(tw.t>=1){Object.assign(cur,t);tw=null}
+  }else if(mode==='walk'){
+    const sp=(keys.shift?4:2.2)*dt;
+    let f=(keys.w||keys.z||keys.arrowup?1:0)-(keys.s||keys.arrowdown?1:0)+pad.f;
+    let r=(keys.d?1:0)-(keys.q||keys.a?1:0);
+    cur.yaw+=((keys.arrowleft?1:0)-(keys.arrowright?1:0))*1.8*dt;
+    const sn=Math.sin(cur.yaw),cs=Math.cos(cur.yaw);
+    const dx=(-sn*f+cs*r)*sp,dz=(-cs*f-sn*r)*sp;
+    if(!blocked(cur.x+dx,cur.z))cur.x+=dx;
+    if(!blocked(cur.x,cur.z+dz))cur.z+=dz;
+  }
+  ceilings.forEach(c=>c.visible=cur.y<2.7);
+  cam.position.set(cur.x,cur.y,cur.z);cam.rotation.set(cur.pitch,cur.yaw,0);
+  hud(mode==='top'&&!tw?'top':roomAt(cur.x));
+  drawMap();
+  renderer.render(scene,cam);
+  requestAnimationFrame(loop);
+}
+hud('top');
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
